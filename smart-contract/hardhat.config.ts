@@ -1,6 +1,7 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
-require ('dotenv').config()
+require ('dotenv').config();
+require('@openzeppelin/hardhat-upgrades');
 
 const { 
   ALCHEMY_SEPOLIA_API_KEY_URL, 

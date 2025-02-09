@@ -4,7 +4,10 @@
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
 const PeteToken = buildModule("PeteToken", (m) => {
-  const peteToken = m.contract("PeteToken", []);
+  const initialSupply = m.getParameter("initialSupply");
+  initialSupply.defaultValue = 100;
+
+  const peteToken = m.contract("PeteToken", [initialSupply]);
   return { peteToken };
 });
 
