@@ -3,10 +3,9 @@
 
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
-const PeteNFT = buildModule("PeteNFT", (m) => {
-
-  const peteNFT = m.contract("PeteNFT", []);
-  return { peteNFT };
+const TicketFactory = buildModule("TicketFactory", (m) => {
+  const ticketFactory = m.contract("TicketFactory", []);
+  return { ticketFactory };
 });
 
-export default PeteNFT;
+export default TicketFactory;

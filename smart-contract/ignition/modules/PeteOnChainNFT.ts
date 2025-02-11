@@ -3,9 +3,9 @@
 
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
-const Savings = buildModule("Savings", (m) => {
-  const savings = m.contract("Savings", []);
-  return { savings };
+const PeteOnChainNFT = buildModule("PeteOnChainNFT", (m) => {
+  const onChain = m.contract("PeteOnChainNFT", []);
+  return { onChain };
 });
 
-export default Savings;
+export default PeteOnChainNFT;
