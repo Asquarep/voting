@@ -2,6 +2,7 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { TicketFactory, EventContract, PeteOnChainNFT } from "../typechain-types";
 import { loadFixture } from "ethereum-waffle";
+import {ethers as ethers2, parseUnits} from "ethers"
 
 // A fixture function to deploy contracts and set up necessary state
 async function deployContracts() {
@@ -23,12 +24,14 @@ async function deployContracts() {
 describe("EventContract", function () {
   it("Should create an event successfully", async function () {
     const { eventContract, owner } = await loadFixture(deployContracts);
+    const blockNumBefore = await ethers.provider.getBlockNumber();
+    const block = await ethers.provider.getBlock(blockNumBefore);
 
     const tx = await eventContract.createEvent(
       "Blockchain Summit",
       "A major blockchain event",
-      (await ethers.provider.getBlock("latest")).timestamp + 86400, // Start date (1 day ahead)
-      (await ethers.provider.getBlock("latest")).timestamp + 172800, // End date (2 days ahead)
+      block.timestamp + 86400, // Start date (1 day ahead)
+      block.timestamp + 172800, // End date (2 days ahead)
       0, // Free event
       100, // Expected guests
       "SummitTicket",
@@ -45,12 +48,14 @@ describe("EventContract", function () {
 
   it("Should allow users to register for an event and mint a ticket", async function () {
     const { eventContract, user } = await loadFixture(deployContracts);
+    const blockNumBefore = await ethers.provider.getBlockNumber();
+    const block = await ethers.provider.getBlock(blockNumBefore);
 
     await eventContract.createEvent(
       "Tech Expo",
       "A big tech event",
-      (await ethers.provider.getBlock("latest")).timestamp + 86400,
-      (await ethers.provider.getBlock("latest")).timestamp + 172800,
+      block.timestamp + 86400,
+      block.timestamp + 172800,
       0,
       50,
       "ExpoTicket",
@@ -68,12 +73,14 @@ describe("EventContract", function () {
 
   it("Should prevent duplicate registration", async function () {
     const { eventContract, user } = await loadFixture(deployContracts);
+    const blockNumBefore = await ethers.provider.getBlockNumber();
+    const block = await ethers.provider.getBlock(blockNumBefore);
 
     await eventContract.createEvent(
       "Duplicate Test",
       "Testing duplicate registrations",
-      (await ethers.provider.getBlock("latest")).timestamp + 86400,
-      (await ethers.provider.getBlock("latest")).timestamp + 172800,
+      block.timestamp + 86400,
+      block.timestamp + 172800,
       0,
       10,
       "DupTicket",
@@ -86,8 +93,10 @@ describe("EventContract", function () {
 
   it("Should allow users to check in if they own a ticket and event has started", async function () {
     const { eventContract, user } = await loadFixture(deployContracts);
+    const blockNumBefore = await ethers.provider.getBlockNumber();
+    const block = await ethers.provider.getBlock(blockNumBefore);
 
-    const startTime = (await ethers.provider.getBlock("latest")).timestamp + 2; // Starts in 2 seconds
+    const startTime = block.timestamp + 2; // Starts in 2 seconds
     const endTime = startTime + 86400;
 
     await eventContract.createEvent("Live Event", "A test event", startTime, endTime, 0, 5, "LiveTicket", "LTK");
@@ -103,12 +112,14 @@ describe("EventContract", function () {
 
   it("Should prevent check-in before event starts", async function () {
     const { eventContract, user } = await loadFixture(deployContracts);
+    const blockNumBefore = await ethers.provider.getBlockNumber();
+    const block = await ethers.provider.getBlock(blockNumBefore);
 
     await eventContract.createEvent(
       "Future Event",
       "Event that hasn't started",
-      (await ethers.provider.getBlock("latest")).timestamp + 86400,
-      (await ethers.provider.getBlock("latest")).timestamp + 172800,
+      block.timestamp + 86400,
+      block.timestamp + 172800,
       0,
       10,
       "FutureTicket",
@@ -121,12 +132,14 @@ describe("EventContract", function () {
 
   it("Should prevent check-in without a valid ticket", async function () {
     const { eventContract, user } = await loadFixture(deployContracts);
+    const blockNumBefore = await ethers.provider.getBlockNumber();
+    const block = await ethers.provider.getBlock(blockNumBefore);
 
     await eventContract.createEvent(
       "No Ticket Check-in",
       "Attempting check-in without ticket",
-      (await ethers.provider.getBlock("latest")).timestamp + 2,
-      (await ethers.provider.getBlock("latest")).timestamp + 172800,
+      block.timestamp + 2,
+      block.timestamp + 172800,
       0,
       10,
       "NoTicket",
@@ -141,8 +154,10 @@ describe("EventContract", function () {
 
   it("Should prevent duplicate check-ins", async function () {
     const { eventContract, user } = await loadFixture(deployContracts);
+    const blockNumBefore = await ethers.provider.getBlockNumber();
+    const block = await ethers.provider.getBlock(blockNumBefore);
 
-    const startTime = (await ethers.provider.getBlock("latest")).timestamp + 2;
+    const startTime = block.timestamp + 2;
     const endTime = startTime + 86400;
 
     await eventContract.createEvent("Single Check-in", "Ensure single attendance", startTime, endTime, 0, 5, "SCITicket", "SCIT");
