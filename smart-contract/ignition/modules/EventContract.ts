@@ -4,9 +4,9 @@
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
 const EventContract = buildModule("EventContract", (m:any) => {
-  // 0x0000000000000000000000000000000000000000
+  const ticketFactoryAddress = m.getParameter("_ticketFactory");
   
-  const event = m.contract("EventContract", []);
+  const event = m.contract("EventContract", [ticketFactoryAddress]);
   return { event };
 });
 
