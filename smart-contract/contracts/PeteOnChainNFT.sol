@@ -35,8 +35,8 @@ contract PeteOnChainNFT is ERC721URIStorage  {
     function getTokenURI(uint256 tokenId) public pure returns (string memory){
         bytes memory dataURI = abi.encodePacked(
             '{',
-                '"name": "Chain Battles #', tokenId.toString(), '",',
-                '"description": "Battles on chain",',
+                '"name": "Pete #', tokenId.toString(), '",',
+                '"description": "Pete NFT",',
                 '"image": "', generateCharacter(tokenId), '"',
             '}'
         );

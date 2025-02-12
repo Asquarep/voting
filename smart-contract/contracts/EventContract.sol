@@ -96,7 +96,7 @@ contract EventContract {
 
         require(
             IPeteOnChainNFT(_event.ticketAddress).balanceOf(msg.sender) > 0,
-            "NO VALID TICKET"
+            "NO VALID TICKET AVAILABLE FOR THIS GUEST"
         );
 
         hasCheckedIn[msg.sender][_eventId] = true;
