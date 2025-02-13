@@ -7,94 +7,90 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const FILE_PATH = path.join(__dirname, "addressesByNetwork.json");
 
 async function main() {
-  const [deployer, user] = await ethers.getSigners();
+  const [admin, voter1, voter2] = await ethers.getSigners();
   const networkName = network.name;
 
   console.log(`Running on network: ${networkName}`);
-  console.log("Deploying contracts with account:", deployer.address);
+  console.log("Deploying contracts with account:", admin.address);
 
-  // Load or initialize already deployed addressesByNetwork.json
+  // Load or initialize already deployed addresses
   let addresses: Record<string, any> = {};
   if (fs.existsSync(FILE_PATH)) {
     addresses = JSON.parse(fs.readFileSync(FILE_PATH, "utf8"));
   }
 
-  let ticketFactoryAddress;
-  let eventContractAddress;
+  let votingNFTAddress;
+  let electionAddress;
 
-  // Check if contracts are already deployed (skip deployment for persistent networks)
+  // Check if contracts are already deployed
   if (addresses[networkName] && networkName !== "localhost" && networkName !== "hardhat") {
     console.log(`Contracts already deployed on ${networkName}:`, addresses[networkName]);
   } else {
     console.log("Deploying contracts...");
 
-    // Deploy TicketFactory
-    const TicketFactory = await ethers.getContractFactory("TicketFactory");
-    const ticketFactory = await TicketFactory.deploy();
-    await ticketFactory.waitForDeployment();
-    console.log("TicketFactory deployed to:", ticketFactory.target);
+    // Deploy VotingNFT contract
+    const VotingNFT = await ethers.getContractFactory("VotingNFT");
+    const votingNFT = await VotingNFT.deploy("VOTE");
+    await votingNFT.waitForDeployment();
+    console.log("VotingNFT deployed to:", votingNFT.target);
 
-    // Deploy EventContract with TicketFactory's address
-    const EventContract = await ethers.getContractFactory("EventContract");
-    const eventContract = await EventContract.deploy(ticketFactory.target);
-    await eventContract.waitForDeployment();
-    console.log("EventContract deployed to:", eventContract.target);
+    // Deploy Election contract
+    const candidates = ["Alice", "Bob", "Charlie"];
+    const block = await ethers.provider.getBlock("latest");
+    const startTime = block!.timestamp + 5; // Starts in 5 seconds
+    const endTime = startTime + 5; // Ends in start time plus 5 seconds
+
+    const Election = await ethers.getContractFactory("Election");
+    const election = await Election.deploy(votingNFT.target, admin.address, candidates, startTime, endTime);
+    await election.waitForDeployment();
+    console.log("Election deployed to:", election.target);
 
     // Save addresses
     addresses[networkName] = {
-      ticketFactory: ticketFactory.target,
-      eventContract: eventContract.target,
+      votingNFT: votingNFT.target,
+      election: election.target,
     };
     fs.writeFileSync(FILE_PATH, JSON.stringify(addresses, null, 2));
   }
 
   // Get contract instances
-  ticketFactoryAddress = addresses[networkName].ticketFactory;
-  eventContractAddress = addresses[networkName].eventContract;
-  const eventContract = await ethers.getContractAt("EventContract", eventContractAddress);
+  votingNFTAddress = addresses[networkName].votingNFT;
+  electionAddress = addresses[networkName].election;
+  const election = await ethers.getContractAt("Election", electionAddress);
+  const votingNFT = await ethers.getContractAt("VotingNFT", votingNFTAddress);
 
-  // Get block timestamp for event start time
-  const block = await ethers.provider.getBlock("latest");
-  const startTime = block.timestamp + 10;
-  const endTime = startTime + 86400;
-
-  // Create an event
-  console.log("Creating an event...");
-  let tx = await eventContract.createEvent("Blockchain Summit", "A major blockchain event", startTime, endTime, 0, 100, "SummitTicket", "STK");
+  // Register voters (mint NFT)
+  console.log("Registering voters...");
+  let tx = await votingNFT.connect(admin).mintNFT(voter1.address);
   await tx.wait();
-  console.log("Event created successfully.");
+  console.log(`Voter1 (${voter1.address}) registered.`);
 
-  // Register a user for the event
-  console.log("Registering user for event...");
-  tx = await eventContract.connect(user).registerForEvent(1);
+  tx = await votingNFT.connect(admin).mintNFT(voter2.address);
   await tx.wait();
-  console.log("User registered successfully.");
+  console.log(`Voter2 (${voter2.address}) registered.`);
 
-  // Get event details
-  const event = await eventContract.events(1);
-  console.log("Event details:", event);
+  // Wait for election to start
+  console.log("Waiting for election to start...");
+  await delay(5000);
 
-  // Get ticket contract instance
-  const ticketContract = await ethers.getContractAt("PeteOnChainNFT", event.ticketAddress);
-  console.log("Ticket contract deployed to:", event.ticketAddress);
-
-  // Check user ticket balance
-  const ticketBalance = await ticketContract.balanceOf(user.address);
-  console.log("User ticket balance:", ticketBalance.toString());
-
-  // Wait for event to start
-  console.log("Waiting for event to start...");
-  await delay(10000);
-
-  // Check-in user
-  console.log("Checking in user...");
-  tx = await eventContract.connect(user).checkIn(1);
+  // Voters cast their votes
+  console.log("Casting votes...");
+  tx = await election.connect(voter1).vote(1, 0); // Voter1 votes for Alice
   await tx.wait();
-  console.log("User checked in successfully.");
+  console.log(`Voter1 (${voter1.address}) voted.`);
 
-  // Get updated event details
-  const updatedEvent = await eventContract.events(1);
-  console.log("Updated event details:", updatedEvent);
+  tx = await election.connect(voter2).vote(2, 1); // Voter2 votes for Bob
+  await tx.wait();
+  console.log(`Voter2 (${voter2.address}) voted.`);
+
+  // Wait for election to end
+  console.log("Waiting for election to end...");
+  await delay(15000);
+
+  // Fetch results
+  console.log("Fetching election results...");
+  const results = await election.getResults();
+  console.log(`Final results: Alice(${results[0]}), Bob(${results[1]}), Charlie(${results[2]})`);
 }
 
 // Execute script
