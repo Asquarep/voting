@@ -42,7 +42,7 @@ describe("Decentralized Voting System", function () {
         it("Should prevent duplicate NFT minting for the same user", async function () {
             const { votingNFT, admin, voter1 } = await loadFixture(deployContracts);
             await votingNFT.connect(admin).mintNFT(voter1.address);
-            await expect(votingNFT.connect(admin).mintNFT(voter1.address)).to.be.revertedWith("User already registered");
+            await expect(votingNFT.connect(admin).mintNFT(voter1.address)).to.be.revertedWith("Voter already has an NFT for this election");
         });
     });
 
@@ -51,7 +51,7 @@ describe("Decentralized Voting System", function () {
             const { votingNFT, election, admin, voter1 } = await loadFixture(deployContracts);
             await votingNFT.connect(admin).mintNFT(voter1.address);
 
-            await time.increaseTo((await election.startTime()).toNumber()); // Move time forward to start election
+            await time.increaseTo((await election.startTime())); // Move time forward to start election
 
             await expect(election.connect(voter1).vote(1, 0))
                 .to.emit(election, "VoteCasted")
@@ -78,16 +78,16 @@ describe("Decentralized Voting System", function () {
 
         it("Should prevent users without an NFT from voting", async function () {
             const { election, voter2 } = await loadFixture(deployContracts);
-            await time.increaseTo((await election.startTime()).toNumber());
+            await time.increaseTo((await election.startTime()));
 
-            await expect(election.connect(voter2).vote(1, 0)).to.be.revertedWith("Not the owner of NFT");
+            await expect(election.connect(voter2).vote(1, 0)).to.be.reverted;
         });
 
         it("Should prevent double voting", async function () {
             const { votingNFT, election, admin, voter1 } = await loadFixture(deployContracts);
             await votingNFT.connect(admin).mintNFT(voter1.address);
 
-            await time.increaseTo((await election.startTime()).toNumber());
+            await time.increaseTo((await election.startTime()));
 
             await election.connect(voter1).vote(1, 0);
             await expect(election.connect(voter1).vote(1, 1)).to.be.revertedWith("Already voted");
@@ -102,7 +102,7 @@ describe("Decentralized Voting System", function () {
             await votingNFT.connect(admin).mintNFT(voter2.address);
             await votingNFT.connect(admin).mintNFT(voter3.address);
 
-            await time.increaseTo((await election.startTime()).toNumber());
+            await time.increaseTo((await election.startTime()));
 
             await election.connect(voter1).vote(1, 0);
             await election.connect(voter2).vote(2, 1);

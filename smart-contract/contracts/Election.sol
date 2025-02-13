@@ -46,7 +46,7 @@ contract Election {
         require(block.timestamp >= startTime, "Election has not started");
         require(block.timestamp <= endTime, "Election has ended");
         require(candidateIndex < candidates.length, "Invalid candidate");
-        require(votingNFT.ownerOf(tokenId) == msg.sender, "Not the owner of NFT");
+        require(votingNFT.ownerOf(tokenId) == msg.sender);
         require(!hasVoted[msg.sender], "Already voted");
 
         votes[tokenId] = candidateIndex;
